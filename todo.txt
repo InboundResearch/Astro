@@ -1,0 +1,23 @@
+X zoom on mouse wheel
+X display FOV
+- modularize with API
+- bundle and obfuscate
+- options
+- json file for scene?
+- line drawing / elipse drawing
+X compute ephemerides from TLE
+- finish WGS implementation
+- use WGS altitide as basis for satellite altitude
+X add a worker thread to update satellite ephemerides...
+X add 10 worker threads...
+- ground rendering, ground track projection, ground coverage projection
+- update webgl with resize handling
+- correct moon orientation
+- live clouds?
+- seasonal ground map
+- pause/play/time controls
+- click to select (attach metadata to an object to display)
+- reset button
+- progressive loading of large textures
+- add credits for textures and data used
+- add an "options" object with some ways to spead the whole thing up
