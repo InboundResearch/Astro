@@ -9,7 +9,7 @@ pushd $SCRIPT_DIR;
 
 echo "pushing to S3..."
 dotclean.js .
-aws s3 sync --profile "brettonw-iR" . s3://astro-website-bucket --delete --exclude "*" --include "img/*" --include "textures/*" --include "shaders/*" --include "modules/*" --include "data/*" --include "*.html" --include "*.css" --acl public-read
+aws s3 sync --profile "brettonw-iR" . s3://astro-website-bucket --delete --exclude "*" --include "img/*" --include "textures/*" --include "shaders/*" --include "modules/*" --include "data/*" --include "index.html" --include "*.css" --acl public-read
 
 echo "invalidating distribution to force cache refresh...";
 aws cloudfront create-invalidation --profile "brettonw-iR" --distribution-id E2WDSW49W7014M --paths "/*"
