@@ -111,23 +111,38 @@ let updateSolarSystem = function (time) {
     let jc = time / daysPerJulianCentury;
     // SUN
     {
-        let computeSunPosition = function (t_jc) {
+        let computeSunPosition = function (julianCentury) {
             let result = Object.create (null);
             // compute the mean longitude and mean anomaly of the sun (degrees)
+            /*
             let meanLongitude = 280.460 + (36000.77 * t_jc);
             let meanAnomaly = 357.5277233 + (35999.05034 * t_jc);
+
             // compute the ecliptic longitude of the sun (degrees)
             let eclipticLongitude = meanLongitude + (1.914666471 * sin (meanAnomaly)) + (0.019994643 * sin (meanAnomaly + meanAnomaly));
+            */
+            // compute the mean longitude and mean anomaly of the sun (degrees)
+            // updated 2022/11/28 from https://gml.noaa.gov/grad/solcalc/NOAA_Solar_Calculations_day.xls
+            let meanLongitude = (280.46646 + julianCentury * (36000.76983 + (julianCentury * 0.0003032))) % 360;
+            let meanAnomaly = 357.52911 + (julianCentury * (35999.05029 - (0.0001537 * julianCentury)));
+            // compute the ecliptic longitude of the sun (degrees)
+            let eclipticLongitude = meanLongitude +
+                (sin(meanAnomaly) * (1.914602 - (julianCentury * (0.004817 + (0.000014 * julianCentury))))) +
+                (sin(2 * meanAnomaly) * (0.019993 - (0.000101 * julianCentury))) +
+                (sin(3 * meanAnomaly) * 0.000289);
+            let apparentLongitude = eclipticLongitude - 0.00569 - (0.00478 * sin(125.04 - (1934.136 * julianCentury)));
+            let sinApparentLongitude = sin(apparentLongitude);
             // compute the distance to the sun in astronomical units
             result.r = 1.000140612 - (0.016708617 * cos (meanAnomaly)) - (0.000139589 * cos (meanAnomaly + meanAnomaly));
             // compute the ecliptic obliquity (degrees)
-            let eclipticObliquity = 23.439291 - (0.0130042 * t_jc);
+            let meanObliqueEcliptic = 23 + (26 + ((21.448 - (julianCentury * (46.815 + (julianCentury * (0.00059 - (julianCentury * 0.001813))))))) / 60) / 60;
+            let correctedObliqueEcliptic = meanObliqueEcliptic + (0.00256 * cos(125.04 - (1934.136 * julianCentury)));
+            //let eclipticObliquity = 23.439291 - (0.0130042 * t_jc);
             // compute geocentric equatorial direction, note that these are re-ordered to reflect the
             // rotation of the solar system coordinate frame into my Y-up viewing frame
-            let sinEclipticLongitude = sin (eclipticLongitude);
             let I = cos (eclipticLongitude);
-            let J = cos (eclipticObliquity) * sinEclipticLongitude;
-            let K = sin (eclipticObliquity) * sinEclipticLongitude;
+            let J = cos (correctedObliqueEcliptic) * sinApparentLongitude;
+            let K = sin (correctedObliqueEcliptic) * sinApparentLongitude;
             result.direction = Float3.normalize ([-I, K, J]);
             return result;
         };
