@@ -3,7 +3,7 @@ import {Astro} from "./astro.mjs"
 let create = function (canvasDivId, fpsDivId, cameraDivId, loadingDivId, buttonBarDivId) {
     let selectedBorderWidth = "3px";
 
-    Astro (canvasDivId, fpsDivId, cameraDivId, loadingDivId, astro => {
+    window.astro = Astro (canvasDivId, fpsDivId, cameraDivId, loadingDivId, astro => {
         let currentButton;
         let buttonBar = document.getElementById(buttonBarDivId);
         let addButton = function (innerText, filterCriteria, doClick = false) {
