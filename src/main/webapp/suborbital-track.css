@@ -15,8 +15,7 @@ body {
     background-color:   #112244;
     height:             100%;
     margin:             auto;
-    width:              80%;
-    max-width:          1282px;
+    width:              100%;
     overflow:           hidden;
     font-family:        sans-serif;
     color:              white;
@@ -25,7 +24,7 @@ body {
 
 #render-container {
     width:              100%;
-    border:             solid 1px white;
+    border:             none;
 }
 
 #render-canvas-div {
@@ -35,12 +34,4 @@ body {
 
 canvas {
     background-color:   #ff0000;
-}
-
-div#title {
-    margin:         10px 0 10px 0;
-}
-
-div#footer {
-    margin-top:         5px;
 }
