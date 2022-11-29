@@ -40,6 +40,11 @@ vec3 raDecToVec3(const in vec2 raDec) {
     return vec3 (cos(ra) * cosDec, sin(ra) * cosDec, sin(dec));
 }
 
+
+vec3 debugRedBlue(const in float value) {
+    return vec3(max(value, 0.0), 0.0, max(-value, 0.0));
+}
+
 void main(void) {
     // convert the uv to right ascension and declination, (0, 0) top left, (1, 1) bottom right,
     // then to a ground normal vector
@@ -50,7 +55,7 @@ void main(void) {
     vec3 sun = raDecToVec3(sunRaDec);
 
     // compute the cosine of the angle between the ground and the sun
-    float sunVisibility = max(pow(1.0 - dot(sun, groundNormal), 5.0), 0.0);
+    float sunVisibility = max(pow(1.0 - dot(sun, groundNormal), 1.0e1), 0.0);
 
     // get the texture map day color. The maps we are using (from Blue Marble at
     // http://visibleearth.nasa.gov/view_cat.php?categoryID=1484&p=1) are very saturated, so we
@@ -67,7 +72,7 @@ void main(void) {
 
     groundColor = screenColor (groundColor, vec3(0.1, 0.1, 0.1));
 
-    // add a grid I want a little spike function on the grid boundaries
+    // add a grid, a little spike function on the grid boundaries
     // a sin function that repeats on the boundaries is: sin((x*2 * pi) + (pi/2))
     float gridScale = 18.0;
     float lineScale = 1.0e3;
@@ -75,5 +80,6 @@ void main(void) {
     float gY = pow((sin((uv.y * 0.5 * gridScale * 2.0 * PI) + (PI / 2.0)) + 1.0) / 2.0, lineScale);
     groundColor = smoothmix (groundColor, vec3(1.0, 0.66, 0.0), max (gX, gY) * 0.4);
 
+    //groundColor = debugRedBlue(abs(groundRaDec.x - sunRaDec.x) / (2.0 * PI));
     fragmentColor = vec4 (groundColor, outputAlpha);
 }
