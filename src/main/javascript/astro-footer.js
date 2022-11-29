@@ -771,5 +771,9 @@
         })
     });
 
+    $.updateVis = function (idsToShow, timeToShow = Date.now()) {
+        LogLevel.info ("Update Vis called with " + idsToShow.length + " elements, at " + timeToShow.toString());
+    };
+
     return $;
 };
