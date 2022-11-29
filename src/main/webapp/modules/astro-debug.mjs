@@ -828,7 +828,7 @@ $.addTle = function (filterCriteria) {
     };
     let originTime = performance.now ();
     let originTimeOffset = Date.now () - originTime;
-    let timeFactor = 10;
+    let timeFactor = 1;
     let currentTime;
     let lastFrameTimeMs = 0;
     let lastTimestamp = 0;
