@@ -114,14 +114,6 @@ let updateSolarSystem = function (time) {
         let computeSunPosition = function (julianCentury) {
             let result = Object.create (null);
             // compute the mean longitude and mean anomaly of the sun (degrees)
-            /*
-            let meanLongitude = 280.460 + (36000.77 * t_jc);
-            let meanAnomaly = 357.5277233 + (35999.05034 * t_jc);
-
-            // compute the ecliptic longitude of the sun (degrees)
-            let eclipticLongitude = meanLongitude + (1.914666471 * sin (meanAnomaly)) + (0.019994643 * sin (meanAnomaly + meanAnomaly));
-            */
-            // compute the mean longitude and mean anomaly of the sun (degrees)
             // updated 2022/11/28 from https://gml.noaa.gov/grad/solcalc/NOAA_Solar_Calculations_day.xls
             let meanLongitude = (280.46646 + julianCentury * (36000.76983 + (julianCentury * 0.0003032))) % 360;
             let meanAnomaly = 357.52911 + (julianCentury * (35999.05029 - (0.0001537 * julianCentury)));
@@ -137,7 +129,6 @@ let updateSolarSystem = function (time) {
             // compute the ecliptic obliquity (degrees)
             let meanObliqueEcliptic = 23 + (26 + ((21.448 - (julianCentury * (46.815 + (julianCentury * (0.00059 - (julianCentury * 0.001813))))))) / 60) / 60;
             let correctedObliqueEcliptic = meanObliqueEcliptic + (0.00256 * cos(125.04 - (1934.136 * julianCentury)));
-            //let eclipticObliquity = 23.439291 - (0.0130042 * t_jc);
             // compute geocentric equatorial direction, note that these are re-ordered to reflect the
             // rotation of the solar system coordinate frame into my Y-up viewing frame
             let I = cos (eclipticLongitude);
@@ -1393,5 +1384,8 @@ $.addTle = function (filterCriteria) {
             measureMonitorRefreshRate (startRendering);
         })
     });
+    $.updateVis = function (idsToShow, timeToShow = Date.now()) {
+        LogLevel.info ("Update Vis called with " + idsToShow.length + " elements, at " + timeToShow.toString());
+    };
     return $;
 };
