@@ -17,9 +17,9 @@ window.addEventListener ("load", event => {
 
 window.addEventListener("message", event => {
     if (suborbitalTrack) {
-        updateVisData = event.data;
-    } else {
         suborbitalTrack.updateVis(event.data.idsToShow,
             ("timeToShow") in event.data ? event.data.timeToShow : Date.now());
+    } else {
+        updateVisData = event.data;
     }
 });
