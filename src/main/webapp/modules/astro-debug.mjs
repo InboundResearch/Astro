@@ -2,7 +2,7 @@
 // default values...
 // vector manipulation macros
 import "https://astro.irdev.us/modules/satellite.mjs";
-import {WebGL2, LogLevel, Utility, Float2, Float3, Float4x4} from "https://webgl.irdev.us/webgl.mjs";
+import {WebGL2, LogLevel, Utility, Float2, Float3, Float4x4} from "https://webgl.irdev.us/modules/webgl.mjs";
 export let Astro = function (mainCanvasDivId, fpsDivId, cameraDivId, loadingDivId, onReadyCallback = function (astro) {}) {
     let $ = Object.create (null);
     let wgl = $.wgl = WebGL2();
