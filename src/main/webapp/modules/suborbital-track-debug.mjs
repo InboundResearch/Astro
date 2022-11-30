@@ -1,6 +1,7 @@
 // class hierarchy
 // default values...
 // vector manipulation macros
+import "https://astro.irdev.us/modules/satellite.mjs";
 import {WebGL2, LogLevel, Utility, Float2, Float3, Float4x4} from "https://webgl.irdev.us/modules/webgl.mjs";
 export let SuborbitalTrack = function (mainCanvasDivId, onReadyCallback = function (suborbitalTrack) {}) {
     let $ = Object.create (null);
@@ -127,6 +128,7 @@ let Tle = function () {
         // do initialization and reverse indexing
         let nowTime = Date.now ();
         let elementIndex = this.elementIndex = {};
+        const satelliteScale = Float4x4.scale (0.01);
         for (let i = 0, end = elements.length; i < end; ++i) {
             let element = elements[i];
             element.index = i;
@@ -153,14 +155,12 @@ let Tle = function () {
             //LogLevel.info("name: " + element.name + ", lat: " + Utility.radiansToDegrees(position.latitude).toFixed (3) + ", lon: " + Utility.radiansToDegrees(position.longitude).toFixed (3) + ", alt: " + position.height);
             Float4x4.copy(Float4x4.chain(
                 element.transform,
-                Float4x4.translate([(position.height + earthRadius) / earthRadius, 0, 0]),
-                Float4x4.rotateZ(position.latitude),
-                // our earth globe is defined with the seam 180 degrees around
-                // XXX should fix this...
-                // XXX the parent node is failing to transmit the gmst rotation around the y-axis
-                // XXX should fix this too...
-                Float4x4.rotateY(Math.PI + position.longitude + position.gmst),
-                //Float4x4.rotateY (position.longitude)
+                Float4x4.translate([
+                    Utility.unwind2 (position.longitude, -Math.PI, Math.PI) / Math.PI,
+                    Utility.unwind2 (position.latitude, -Math.PI, Math.PI) / Math.PI,
+                    -0.2
+                ])
+                //Float4x4.rotateY(Math.PI + position.longitude + position.gmst),
             ), matrices[element.index]);
         };
         let computePosition = function (element) {
@@ -202,8 +202,8 @@ let Tle = function () {
 let tle;
 $.addTle = function (idsToShow) {
     tle = null;
-    let worldNode = Node.get ("world");
-    worldNode.removeChild("tle");
+    let rootNode = Node.get ("root");
+    rootNode.removeChild("tle");
     // get the tles...
     let elementsText = TextFile.get ("elements").text;
     let elementsTextFirstChar = elementsText.charAt(0);
@@ -220,28 +220,16 @@ $.addTle = function (idsToShow) {
             replace: true,
             instance: elements.length,
             state: function (standardUniforms) {
-                Program.get ("shadowed").use ().setSunPosition (solarSystem.sunPosition);
-                //Program.get ("basic").use ();
+                Program.get ("basic").use ();
                 standardUniforms.OUTPUT_ALPHA_PARAMETER = 1.0;
                 standardUniforms.MODEL_COLOR = [1.00, 0.70, 0.40];
                 standardUniforms.AMBIENT_CONTRIBUTION = 0.25;
                 standardUniforms.DIFFUSE_CONTRIBUTION = 0.90;
             },
-            shape: "ball-tiny",
+            shape: "ball-small",
             children: false
         }, "tle");
-        worldNode.addChild (tleNode);
-        Thing.new ({
-            replace: true,
-            node: "tle",
-            update: function (time) {
-                // time is a J2000 time in seconds... the tle update class needs a Date object
-                // update the satellites - nowTime is a javascript Date
-                //if (tle) {
-                //    tle.updateElements (nowTime, Node.get ("tle").instanceTransforms.matrices);
-                //}
-            }
-        }, "tle");
+        rootNode.addChild (tleNode);
         // let the full list of TLEs update
         tle = Tle.new ({ elements: elements });
         tle.updateElements (new Date (), tleNode.instanceTransforms.matrices, Number.POSITIVE_INFINITY);
@@ -295,6 +283,10 @@ $.addTle = function (idsToShow) {
             let nowTime = new Date (offsetTime);
             currentTime = computeJ2000 (nowTime);
             Thing.updateAll (currentTime);
+            // update the satellites - nowTime is a javascript Date
+            if (tle) {
+                tle.updateElements (nowTime, Node.get ("tle").instanceTransforms.matrices);
+            }
             // set up the view control matrices (just an othographic projection)
             let context = wgl.getContext();
             standardUniforms.MODEL_MATRIX_PARAMETER = Float4x4.IDENTITY;
@@ -307,7 +299,7 @@ $.addTle = function (idsToShow) {
     };
     let buildScene = function () {
         let context = wgl.getContext();
-        makeBall ("ball-tiny", 5);
+        makeBall ("ball-small", 8);
         scene = Node.new ({
             transform: Float4x4.IDENTITY,
             state: function (standardUniforms) {
@@ -415,12 +407,14 @@ $.addTle = function (idsToShow) {
                 .addItems (["ground-stations"]),
             Loader.new ()
                 // proxy to get around the CORS problem
-                .addItem (TextFile, "elements", { url: "https://bedrock.brettonw.com/api?event=fetch&url=https://www.celestrak.com/NORAD/elements/gp.php%3FGROUP%3Dactive%26FORMAT%3Dtle" })
+                //.addItem (TextFile, "elements", { url: "https://bedrock.brettonw.com/api?event=fetch&url=https://www.celestrak.com/NORAD/elements/gp.php%3FGROUP%3Dactive%26FORMAT%3Dtle" })
+                .addItem (TextFile, "elements", { url: "data/gp.tle" })
         ],
         onReady: OnReady.new (null, function (x) {
             Program.new ({ vertexShader: "basic" }, "suborbital-earth");
             // set up the scene and go
             buildScene ();
+            $.addTle (["ISS (NAUKA)"]);
             onReadyCallback ($);
             drawFrame ();
         })
