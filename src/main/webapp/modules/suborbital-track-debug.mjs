@@ -421,6 +421,7 @@ $.addTle = function (idsToShow) {
     });
     $.updateVis = function (idsToShow, timeToShow) {
         LogLevel.info ("Update Vis called with " + idsToShow.length + " elements, at " + timeToShow.toString());
+        this.addTle (idsToShow, timeToShow);
     };
     return $;
 };
