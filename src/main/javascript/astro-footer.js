@@ -771,6 +771,8 @@
 
     $.updateVis = function (idsToShow, timeToShow) {
         LogLevel.info ("Update Vis called with " + idsToShow.length + " elements, at " + timeToShow.toString());
+        this.addTle (idsToShow);
+        // XXX set the time separately...
     };
 
     return $;
