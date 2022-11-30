@@ -157,10 +157,6 @@ $.addTle = function (filterCriteria) {
 
     let elements = Tle.readTle (elementsText);
     if (filterCriteria) {
-        elements = elements.filter (element => element.name.includes (filterCriteria));
-    }
-
-    if (filterCriteria) {
         elements = elements.filter(element => {
             return (typeof (filterCriteria) === "string") ?
                 element.name.includes(filterCriteria):
