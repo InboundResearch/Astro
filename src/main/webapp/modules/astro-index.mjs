@@ -1,6 +1,8 @@
 import {Astro} from "./astro.mjs"
+import {SuborbitalTrack} from "./suborbital-track.mjs";
 
-let astro;
+let updateVisData = null;
+let astro = null;
 
 let create = function (canvasDivId, fpsDivId, cameraDivId, loadingDivId, buttonBarDivId) {
     let selectedBorderWidth = "3px";
@@ -36,19 +38,34 @@ let create = function (canvasDivId, fpsDivId, cameraDivId, loadingDivId, buttonB
         addButton("starlink", "STARLINK");
         addButton("iss", "ISS (NAUKA)");
         addButton("none", "[none]");
+
+        if (window.parent) {
+            window.parent.postMessage("ready","*");
+        }
+        if (updateVisData && (updateVisData !== "ready")) {
+            let timeToShow = ("timeToShow" in updateVisData) ? updateVisData.timeToShow : Date.now();
+            suborbitalTrack.updateVis(updateVisData.idsToShow, timeToShow);
+            updateVisData = null;
+        }
     });
 };
 
 window.addEventListener ("load", event => {
     create ("mainCanvasDiv", "fpsDiv", "cameraDiv", "loadingDiv", "buttonBarDiv");
 
+    // this is here for test purposes when putting multipel visualizations on the same page
     if (!!document.getElementById("mainCanvasDiv2")) {
         create ("mainCanvasDiv2", "fpsDiv2", "cameraDiv2", "loadingDiv2", "buttonBarDiv2");
     }
-
 });
 
 window.addEventListener("message", event => {
-    astro.updateVis(event.data.idsToShow,
-        ("timeToShow") in event.data ? event.data.timeToShow : Date.now());
+    if (astro) {
+        if (event.data !== "ready") {
+            let timeToShow = ("timeToShow" in event.data) ? event.data.timeToShow : Date.now();
+            astro.updateVis(event.data.idsToShow, timeToShow);
+        }
+    } else {
+        updateVisData = event.data;
+    }
 });

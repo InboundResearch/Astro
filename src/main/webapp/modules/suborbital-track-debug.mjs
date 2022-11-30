@@ -414,7 +414,7 @@ $.addTle = function (idsToShow) {
             Program.new ({ vertexShader: "basic" }, "suborbital-earth");
             // set up the scene and go
             buildScene ();
-            $.addTle (["ISS (NAUKA)"]);
+            //$.addTle (["ISS (NAUKA)", "39440"]);
             onReadyCallback ($);
             drawFrame ();
         })

@@ -160,6 +160,16 @@ $.addTle = function (filterCriteria) {
         elements = elements.filter (element => element.name.includes (filterCriteria));
     }
 
+    if (filterCriteria) {
+        elements = elements.filter(element => {
+            return (typeof (filterCriteria) === "string") ?
+                element.name.includes(filterCriteria):
+                filterCriteria.includes(element.name) ||
+                // 1 25544U 98067A   0
+                filterCriteria.includes(element.line1.substring(2, 7));
+        });
+    }
+
     if (elements.length > 0) {
         let tleNode = Node.new ({
             replace: true,
