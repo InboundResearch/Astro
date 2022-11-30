@@ -200,7 +200,7 @@ let Tle = function () {
     return _;
 } ();
 let tle;
-$.addTle = function (noradIds) {
+$.addTle = function (idsToShow) {
     tle = null;
     let worldNode = Node.get ("world");
     worldNode.removeChild("tle");
@@ -211,9 +211,10 @@ $.addTle = function (noradIds) {
         elementsText = JSON.parse (elementsText).response.content;
     }
     let elements = Tle.readTle (elementsText);
-    if (filterCriteria) {
-        elements = elements.filter (element => element.name.includes (filterCriteria));
-    }
+    elements = elements.filter (element => {
+        // 1 25544U 98067A   0
+        return idsToShow.includes (element.name) || idsToShow.includes(element.line1.substring(2, 7));
+    });
     if (elements.length > 0) {
         let tleNode = Node.new ({
             replace: true,
@@ -306,6 +307,7 @@ $.addTle = function (noradIds) {
     };
     let buildScene = function () {
         let context = wgl.getContext();
+        makeBall ("ball-tiny", 5);
         scene = Node.new ({
             transform: Float4x4.IDENTITY,
             state: function (standardUniforms) {
@@ -399,7 +401,6 @@ $.addTle = function (noradIds) {
                 }));
             }
         }
-        drawFrame ();
     };
     // create the render object
     mainCanvasDiv = document.getElementById ("render-canvas-div");
@@ -418,31 +419,12 @@ $.addTle = function (noradIds) {
         ],
         onReady: OnReady.new (null, function (x) {
             Program.new ({ vertexShader: "basic" }, "suborbital-earth");
+            // set up the scene and go
             buildScene ();
+            onReadyCallback ($);
+            drawFrame ();
         })
     });
-    $.addPoint = function (ra, dec, size) {
-        /*
-        let worldNode = Node.get ("world");
-        worldNode.removeChild("point");
-
-        let pointNode = Node.new ({
-            transform: Float4x4.IDENTITY,
-            state: function (standardUniforms) {
-                Program.get ("earth").use ()
-                    .setDayTxSampler ("earth-day")
-                    .setNightTxSampler ("earth-night")
-                    .setSunRaDec ([sol.ra, sol.dec])
-                ;
-                standardUniforms.MODEL_COLOR = [1.0, 1.0, 1.0];
-            },
-            shape: "square",
-            children: false
-        })
-
-        worldNode.addChild (pointNode);
-        */
-    };
     $.updateVis = function (idsToShow, timeToShow) {
         LogLevel.info ("Update Vis called with " + idsToShow.length + " elements, at " + timeToShow.toString());
     };
