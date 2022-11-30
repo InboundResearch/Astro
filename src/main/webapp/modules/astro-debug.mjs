@@ -531,7 +531,7 @@ let makeWgs84 = function (name, steps) {
 let Tle = function () {
     let _ = Object.create (ClassBase);
     // "static" function to read TLEs from a text block (as returned from celestrak, for instance)
-    // and turn them into a rudin=mentary JSON array we can use for tracking
+    // and turn them into a rudimentary JSON array we can use for tracking
     _.readTle = function (tleText) {
         let lines = tleText.split(/\r?\n/);
         let elements = [];
@@ -656,6 +656,7 @@ let Tle = function () {
     };
     return _;
 } ();
+let tle;
 $.addTle = function (filterCriteria) {
     tle = null;
     let worldNode = Node.get ("world");
@@ -713,7 +714,6 @@ $.addTle = function (filterCriteria) {
     let deltaNowHistory = RollingStats.new ({ count: 60, fill: 0 });
     let starsScene;
     let solarSystemScene;
-    let tle;
     let standardUniforms = Object.create (null);
     let cameras = [
         { name: "sweep", type: "fixed", from: "flyer", at: "earth", fov: 40.0, wheel: { field: "fov", inc: -0.5, limitUp: 15, limitDown: 80 } },
@@ -1384,7 +1384,7 @@ $.addTle = function (filterCriteria) {
             measureMonitorRefreshRate (startRendering);
         })
     });
-    $.updateVis = function (idsToShow, timeToShow = Date.now()) {
+    $.updateVis = function (idsToShow, timeToShow) {
         LogLevel.info ("Update Vis called with " + idsToShow.length + " elements, at " + timeToShow.toString());
     };
     return $;

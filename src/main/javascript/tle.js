@@ -2,7 +2,7 @@ let Tle = function () {
     let _ = Object.create (ClassBase);
 
     // "static" function to read TLEs from a text block (as returned from celestrak, for instance)
-    // and turn them into a rudin=mentary JSON array we can use for tracking
+    // and turn them into a rudimentary JSON array we can use for tracking
     _.readTle = function (tleText) {
         let lines = tleText.split(/\r?\n/);
         let elements = [];
@@ -141,6 +141,8 @@ let Tle = function () {
     return _;
 } ();
 
+let tle;
+
 $.addTle = function (filterCriteria) {
     tle = null;
     let worldNode = Node.get ("world");
@@ -192,4 +194,3 @@ $.addTle = function (filterCriteria) {
         tle.updateElements (new Date (), tleNode.instanceTransforms.matrices, Number.POSITIVE_INFINITY);
     }
 };
-

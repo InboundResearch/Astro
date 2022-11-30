@@ -13,8 +13,6 @@
     let starsScene;
     let solarSystemScene;
 
-    let tle;
-
     let standardUniforms = Object.create (null);
 
     let cameras = [
@@ -771,7 +769,7 @@
         })
     });
 
-    $.updateVis = function (idsToShow, timeToShow = Date.now()) {
+    $.updateVis = function (idsToShow, timeToShow) {
         LogLevel.info ("Update Vis called with " + idsToShow.length + " elements, at " + timeToShow.toString());
     };
 
