@@ -156,14 +156,17 @@ $.addTle = function (filterCriteria) {
     }
 
     let elements = Tle.readTle (elementsText);
+
+    // we expect filterCriteria to be a string (which we will match kinda loosely), or an
+    // array of strings, which we will match tightly.
     if (filterCriteria) {
-        elements = elements.filter(element => {
-            return (typeof (filterCriteria) === "string") ?
-                element.name.includes(filterCriteria):
-                filterCriteria.includes(element.name) ||
-                // 1 25544U 98067A   0
-                filterCriteria.includes(element.line1.substring(2, 7));
-        });
+        if (typeof (filterCriteria) === "string") {
+            elements = elements.filter(element => element.name.includes(filterCriteria));
+        } else if (Array.isArray (filterCriteria)) {
+            elements = elements.filter(element => filterCriteria.includes(element.name) || filterCriteria.includes(element.line1.substring(2, 7)));
+        } else {
+            LogLevel.warn ("Invalid filter criteria: " + filterCriteria);
+        }
     }
 
     if (elements.length > 0) {

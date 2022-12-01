@@ -18,7 +18,7 @@
     let cameras = [
         { name: "sweep", type: "fixed", from: "flyer", at: "earth", fov: 40.0, wheel: { field: "fov", inc: -0.5, limitUp: 15, limitDown: 80 } },
         { name: "manual", type: "orbit", at: "earth", zoom: 0.25, fov: 45.0, wheel: { field: "zoom", inc: 0.005, limitUp: 1.5, limitDown: 0.1 }, default: [0.30, 0.20] },
-        { name: "iss", type: "skewer", from: "ISS (NAUKA)", at: "earth", fov: 45, distance: 4.0, wheel: { field: "distance", inc: -0.05, limitUp: 0.35, limitDown: 7.5 } },
+        { name: "iss", type: "skewer", from: "ISS (ZARYA)", at: "earth", fov: 45, distance: 4.0, wheel: { field: "distance", inc: -0.05, limitUp: 0.35, limitDown: 7.5 } },
         { name: "moon at earth", type: "ots", from: "moon", at: "earth", zoom: 0.15, fov: 1.0, default: [-0.70, 0.40] },
         { name: "earth at moon", type: "ots", from: "earth", at: "moon", zoom: 0.5, fov: 2.0, default: [-0.70, 0.40] },
     ];

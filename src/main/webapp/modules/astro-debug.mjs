@@ -2,7 +2,7 @@
 // default values...
 // vector manipulation macros
 import "https://astro.irdev.us/modules/satellite.mjs";
-import {WebGL2, LogLevel, Utility, Float2, Float3, Float4x4} from "https://webgl.irdev.us/modules/webgl.mjs";
+import {WebGL2, LogLevel, Utility, Float2, Float3, Float4x4} from "https://webgl.irdev.us/modules/webgl-debug.mjs";
 export let Astro = function (mainCanvasDivId, fpsDivId, cameraDivId, loadingDivId, onReadyCallback = function (astro) {}) {
     let $ = Object.create (null);
     let wgl = $.wgl = WebGL2();
@@ -668,14 +668,16 @@ $.addTle = function (filterCriteria) {
         elementsText = JSON.parse (elementsText).response.content;
     }
     let elements = Tle.readTle (elementsText);
+    // we expect filterCriteria to be a string (which we will match kinda loosely), or an
+    // array of strings, which we will match tightly.
     if (filterCriteria) {
-        elements = elements.filter(element => {
-            return (typeof (filterCriteria) === "string") ?
-                element.name.includes(filterCriteria):
-                filterCriteria.includes(element.name) ||
-                // 1 25544U 98067A   0
-                filterCriteria.includes(element.line1.substring(2, 7));
-        });
+        if (typeof (filterCriteria) === "string") {
+            elements = elements.filter(element => element.name.includes(filterCriteria));
+        } else if (Array.isArray (filterCriteria)) {
+            elements = elements.filter(element => filterCriteria.includes(element.name) || filterCriteria.includes(element.line1.substring(2, 7)));
+        } else {
+            LogLevel.warn ("Invalid filter criteria: " + filterCriteria);
+        }
     }
     if (elements.length > 0) {
         let tleNode = Node.new ({
@@ -724,7 +726,7 @@ $.addTle = function (filterCriteria) {
     let cameras = [
         { name: "sweep", type: "fixed", from: "flyer", at: "earth", fov: 40.0, wheel: { field: "fov", inc: -0.5, limitUp: 15, limitDown: 80 } },
         { name: "manual", type: "orbit", at: "earth", zoom: 0.25, fov: 45.0, wheel: { field: "zoom", inc: 0.005, limitUp: 1.5, limitDown: 0.1 }, default: [0.30, 0.20] },
-        { name: "iss", type: "skewer", from: "ISS (NAUKA)", at: "earth", fov: 45, distance: 4.0, wheel: { field: "distance", inc: -0.05, limitUp: 0.35, limitDown: 7.5 } },
+        { name: "iss", type: "skewer", from: "ISS (ZARYA)", at: "earth", fov: 45, distance: 4.0, wheel: { field: "distance", inc: -0.05, limitUp: 0.35, limitDown: 7.5 } },
         { name: "moon at earth", type: "ots", from: "moon", at: "earth", zoom: 0.15, fov: 1.0, default: [-0.70, 0.40] },
         { name: "earth at moon", type: "ots", from: "earth", at: "moon", zoom: 0.5, fov: 2.0, default: [-0.70, 0.40] },
     ];

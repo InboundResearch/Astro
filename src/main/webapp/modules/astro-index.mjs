@@ -2,6 +2,14 @@ import {Astro} from "./astro.mjs"
 import {SuborbitalTrack} from "./suborbital-track.mjs";
 
 let updateVisData = null;
+let updateVis = function (data) {
+    if (data && (data !== "ready")) {
+        let timeToShow = ("timeToShow" in data) ? data.timeToShow : Date.now();
+        astro.updateVis(data.idsToShow, timeToShow);
+        updateVisData = null;
+    }
+};
+
 let astro = null;
 
 let create = function (canvasDivId, fpsDivId, cameraDivId, loadingDivId, buttonBarDivId) {
@@ -36,17 +44,13 @@ let create = function (canvasDivId, fpsDivId, cameraDivId, loadingDivId, buttonB
         addButton("all", false, true);
         addButton("oneweb", "ONEWEB");
         addButton("starlink", "STARLINK");
-        addButton("iss", "ISS (NAUKA)");
+        addButton("iss", "ISS (ZARYA)");
         addButton("none", "[none]");
 
         if (window.parent) {
             window.parent.postMessage("ready","*");
         }
-        if (updateVisData && (updateVisData !== "ready")) {
-            let timeToShow = ("timeToShow" in updateVisData) ? updateVisData.timeToShow : Date.now();
-            suborbitalTrack.updateVis(updateVisData.idsToShow, timeToShow);
-            updateVisData = null;
-        }
+        updateVis (updateVisData);
     });
 };
 
@@ -61,10 +65,7 @@ window.addEventListener ("load", event => {
 
 window.addEventListener("message", event => {
     if (astro) {
-        if (event.data !== "ready") {
-            let timeToShow = ("timeToShow" in event.data) ? event.data.timeToShow : Date.now();
-            astro.updateVis(event.data.idsToShow, timeToShow);
-        }
+        updateVis (event.data);
     } else {
         updateVisData = event.data;
     }
