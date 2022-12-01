@@ -5,6 +5,13 @@ let updateVisData = null;
 let updateVis = function (data) {
     if (data && (data !== "ready")) {
         let timeToShow = ("timeToShow" in data) ? data.timeToShow : Date.now();
+
+        // workaround to a minor bug in the webapp calling this
+        if (Array.isArray (data.idsToShow[0])) {
+            data.idsToShow = data.idsToShow[0];
+        }
+
+        // update the vis...
         astro.updateVis(data.idsToShow, timeToShow);
         updateVisData = null;
     }
@@ -45,6 +52,7 @@ let create = function (canvasDivId, fpsDivId, cameraDivId, loadingDivId, buttonB
         addButton("oneweb", "ONEWEB");
         addButton("starlink", "STARLINK");
         addButton("iss", "ISS (ZARYA)");
+        //addButton("test", ["25544", "47258", "47284", "47293"]);
         addButton("none", "[none]");
 
         if (window.parent) {
