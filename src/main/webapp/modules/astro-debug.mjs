@@ -2,7 +2,7 @@
 // default values...
 // vector manipulation macros
 import "https://astro.irdev.us/modules/satellite.mjs";
-import {WebGL2, LogLevel, Utility, Float2, Float3, Float4x4} from "https://webgl.irdev.us/modules/webgl-debug.mjs";
+import {WebGL2, LogLevel, Utility, Float2, Float3, Float4x4} from "https://webgl.irdev.us/modules/webgl.mjs";
 export let Astro = function (mainCanvasDivId, fpsDivId, cameraDivId, loadingDivId, onReadyCallback = function (astro) {}) {
     let $ = Object.create (null);
     let wgl = $.wgl = WebGL2();
@@ -667,10 +667,12 @@ $.addTle = function (filterCriteria) {
     if (elementsTextFirstChar === "{") {
         elementsText = JSON.parse (elementsText).response.content;
     }
+    // read the elements from the TLE file
     let elements = Tle.readTle (elementsText);
-    // we expect filterCriteria to be a string (which we will match kinda loosely), or an
-    // array of strings, which we will match tightly.
+    // if filterCriteria is not empty
     if (filterCriteria) {
+        // we expect filterCriteria to be a string (which we will match kinda loosely), or an
+        // array of strings, which we will match tightly.
         if (typeof (filterCriteria) === "string") {
             elements = elements.filter(element => element.name.includes(filterCriteria));
         } else if (Array.isArray (filterCriteria)) {
@@ -679,7 +681,9 @@ $.addTle = function (filterCriteria) {
             LogLevel.warn ("Invalid filter criteria: " + filterCriteria);
         }
     }
+    // if we have some elements...
     if (elements.length > 0) {
+        // add the render node
         let tleNode = Node.new ({
             replace: true,
             instance: elements.length,
@@ -695,6 +699,7 @@ $.addTle = function (filterCriteria) {
             children: false
         }, "tle");
         worldNode.addChild (tleNode);
+        // XXX add a manager to update the tle node - needs more thought
         Thing.new ({
             replace: true,
             node: "tle",
