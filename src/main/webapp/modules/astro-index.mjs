@@ -65,7 +65,7 @@ let create = function (canvasDivId, fpsDivId, cameraDivId, loadingDivId, buttonB
 window.addEventListener ("load", event => {
     create ("mainCanvasDiv", "fpsDiv", "cameraDiv", "loadingDiv", "buttonBarDiv");
 
-    // this is here for test purposes when putting multipel visualizations on the same page
+    // this is here for test purposes when putting multiple visualizations on the same page
     if (!!document.getElementById("mainCanvasDiv2")) {
         create ("mainCanvasDiv2", "fpsDiv2", "cameraDiv2", "loadingDiv2", "buttonBarDiv2");
     }
