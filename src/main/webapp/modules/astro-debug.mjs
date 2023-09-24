@@ -1381,8 +1381,8 @@ $.addTle = function (filterCriteria) {
                 .addItems (["bsc5-short", "messier"]),
             Loader.new ()
                 // proxy to get around the CORS problem
-                //.addItem (TextFile, "elements", { url: "https://bedrock.brettonw.com/api?event=fetch&url=https://www.celestrak.com/NORAD/elements/gp.php%3FGROUP%3Dactive%26FORMAT%3Dtle" })
-                .addItem (TextFile, "elements", { url: "data/gp.tle" })
+                .addItem (TextFile, "elements", { url: "https://bedrock.brettonw.com/api?event=fetch&url=https://www.celestrak.com/NORAD/elements/gp.php%3FGROUP%3Dactive%26FORMAT%3Dtle" })
+                //.addItem (TextFile, "elements", { url: "data/gp.tle" })
         ],
         onReady: OnReady.new (null, function (x) {
             Program.new ({ vertexShader: "basic" }, "earth");
