@@ -886,16 +886,16 @@ $.addTle = function (filterCriteria) {
             // capture the delta, and save the timestamp for the next go around
             let deltaTimestamp = timestamp - lastTimestamp;
             lastTimestamp = timestamp;
-            // set the clock to "now" in J2000 time
+            // update the satellites - offsetTime is a high resolution timestamp
             let offsetTime = getOffsetTime (now);
+            if (tle) {
+                tle.updateElements (offsetTime, Node.get ("tle").instanceTransforms.matrices);
+            }
+            // set the clock to "now" in J2000 time
             let nowTime = new Date (offsetTime);
             currentTime = computeJ2000 (nowTime);
             updateSolarSystem (currentTime);
             Thing.updateAll (currentTime);
-            // update the satellites - offsetTime is a high resolution timestamp
-            if (tle) {
-                tle.updateElements (offsetTime, Node.get ("tle").instanceTransforms.matrices);
-            }
             // set up the view parameters
             let currentPosition = cameraSettings[camera.name].currentPosition;
             let viewMatrix;
@@ -1386,7 +1386,7 @@ $.addTle = function (filterCriteria) {
         let time = urlParams.get("time") || "current";
         currentTimeOffset = (time === "current") ? 0 : (parseFloat(time) - Date.now ());
         // set the time scale to its initial value, either a parameter in the url or 1
-        setTimeScale (urlParams.get("time_scale"), 1);
+        setTimeScale (urlParams.get("time_scale") || 1.0);
         // set the initial camera
         setCameraByName (urlParams.get("camera"), 0);
         // start drawing frames
