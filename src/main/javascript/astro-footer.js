@@ -1,3 +1,4 @@
+
     let mainCanvasDiv;
     let fpsDiv;
 
@@ -18,6 +19,7 @@
     let cameras = [
         { name: "sweep", type: "fixed", from: "flyer", at: "earth", fov: 40.0, wheel: { field: "fov", inc: -0.5, limitUp: 15, limitDown: 80 } },
         { name: "manual", type: "orbit", at: "earth", zoom: 0.25, fov: 45.0, wheel: { field: "zoom", inc: 0.005, limitUp: 1.5, limitDown: 0.1 }, default: [0.30, 0.20] },
+        { name: "dscovr", type: "fixed", from: "DSCOVR", at: "earth", fov: 1.0, wheel: { field: "fov", inc: -0.25, limitUp: 0.5, limitDown: 3.0 } },
         { name: "iss", type: "skewer", from: "ISS (ZARYA)", at: "earth", fov: 45, distance: 4.0, wheel: { field: "distance", inc: -0.05, limitUp: 0.35, limitDown: 7.5 } },
         { name: "moon at earth", type: "ots", from: "moon", at: "earth", zoom: 0.15, fov: 1.0, default: [-0.70, 0.40] },
         { name: "earth at moon", type: "ots", from: "earth", at: "moon", zoom: 0.5, fov: 2.0, default: [-0.70, 0.40] },
@@ -631,6 +633,21 @@
                 Node.get (this.node).transform = Float4x4.rotateY (Utility.degreesToRadians (gmst));
             }
         }, "world");
+
+        let dscovrNode = Node.new ({
+            transform: Float4x4.identity,
+            children: false
+        }, "DSCOVR");
+        solarSystemScene.addChild (dscovrNode);
+
+        Thing.new ({
+            node:"DSCOVR",
+            update:function (time) {
+                // get the node, and set the L1 transform - because our system is scaled around the
+                // earth/moon region, we scale this down to fit...
+                let node = Node.get (this.node);
+                node.transform = Float4x4.translate (solarSystem.L1);
+            }}, "DSCOVR");
     };
 
     let handleMouseDeltaPosition = function (deltaPosition) {
@@ -682,6 +699,16 @@
         }
     }
 
+    let setCameraByName = function (cameraName, fallback) {
+        for (let i = 0; i < cameras.length; ++i) {
+            if (cameras[i].name === cameraName) {
+                setCamera (i);
+                return;
+            }
+        }
+        setCamera (fallback);
+    }
+
     let handleCameraClick = function (event) {
         // increment the current camera index and set it
         setCamera ((currentCameraIndex + 1) % cameras.length);
@@ -696,7 +723,8 @@
     let startRendering = function () {
         clearTimeout(countdownTimeout);
         // start drawing frames
-        setCamera (0);
+        const urlParams = new URLSearchParams(window.location.search);
+        setCameraByName (urlParams.get("camera"), 0);
         window.requestAnimationFrame (drawFrame);
         setTimeout (() => {
             document.getElementById (loadingDivId).style.opacity = 0;

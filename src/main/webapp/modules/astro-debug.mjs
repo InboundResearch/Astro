@@ -224,6 +224,19 @@ let updateSolarSystem = function (time) {
         let mp = Float3.scale (solarSystem.moonDirection, solarSystem.moonR);
         solarSystem.moonPosition = [mp[0], mp[1], mp[2], moonRadius / earthRadius];
     }
+    // L1
+    {
+        // DSCOVR is tracking the L1 point, and seems to be oriented with the geocentric coordinate
+        // frame (or the ecliptic, I'm not sure). This is an approximation of that position, at 0.01
+        // astronomical units. The actual satellite has a Lissajous orbit around the Earth/Sun line,
+        // varying approximately +/- 10 degrees over a 6 month period. I'm unable to find a detailed
+        // summary of how to compute the position of the satellite, so I'm just going with L1
+        // XXX r is a pretty good approximation at 0.01, but this could be calculated to higher
+        // precision if we need to, it's interesting that the number is pretty close to the earth
+        // radius over the sun radius, but it's just dumb luck
+        let r = 0.01;
+        solarSystem.L1 = Float3.scale (solarSystem.sunDirection, (r * solarSystem.sunR * earthOrbit) / earthRadius);
+    }
 };
 let Blackbody = function () {
     let _ = Object.create (null);
@@ -731,6 +744,7 @@ $.addTle = function (filterCriteria) {
     let cameras = [
         { name: "sweep", type: "fixed", from: "flyer", at: "earth", fov: 40.0, wheel: { field: "fov", inc: -0.5, limitUp: 15, limitDown: 80 } },
         { name: "manual", type: "orbit", at: "earth", zoom: 0.25, fov: 45.0, wheel: { field: "zoom", inc: 0.005, limitUp: 1.5, limitDown: 0.1 }, default: [0.30, 0.20] },
+        { name: "dscovr", type: "fixed", from: "DSCOVR", at: "earth", fov: 1.0, wheel: { field: "fov", inc: -0.25, limitUp: 0.5, limitDown: 3.0 } },
         { name: "iss", type: "skewer", from: "ISS (ZARYA)", at: "earth", fov: 45, distance: 4.0, wheel: { field: "distance", inc: -0.05, limitUp: 0.35, limitDown: 7.5 } },
         { name: "moon at earth", type: "ots", from: "moon", at: "earth", zoom: 0.15, fov: 1.0, default: [-0.70, 0.40] },
         { name: "earth at moon", type: "ots", from: "earth", at: "moon", zoom: 0.5, fov: 2.0, default: [-0.70, 0.40] },
@@ -1272,6 +1286,19 @@ $.addTle = function (filterCriteria) {
                 Node.get (this.node).transform = Float4x4.rotateY (Utility.degreesToRadians (gmst));
             }
         }, "world");
+        let dscovrNode = Node.new ({
+            transform: Float4x4.identity,
+            children: false
+        }, "DSCOVR");
+        solarSystemScene.addChild (dscovrNode);
+        Thing.new ({
+            node:"DSCOVR",
+            update:function (time) {
+                // get the node, and set the L1 transform - because our system is scaled around the
+                // earth/moon region, we scale this down to fit...
+                let node = Node.get (this.node);
+                node.transform = Float4x4.translate (solarSystem.L1);
+            }}, "DSCOVR");
     };
     let handleMouseDeltaPosition = function (deltaPosition) {
         let settings = cameraSettings[camera.name];
@@ -1318,6 +1345,15 @@ $.addTle = function (filterCriteria) {
             cameraSettings[camera.name] = { currentPosition: ("default" in camera) ? camera.default : [0, 0] };
         }
     }
+    let setCameraByName = function (cameraName, fallback) {
+        for (let i = 0; i < cameras.length; ++i) {
+            if (cameras[i].name === cameraName) {
+                setCamera (i);
+                return;
+            }
+        }
+        setCamera (fallback);
+    }
     let handleCameraClick = function (event) {
         // increment the current camera index and set it
         setCamera ((currentCameraIndex + 1) % cameras.length);
@@ -1330,7 +1366,8 @@ $.addTle = function (filterCriteria) {
     let startRendering = function () {
         clearTimeout(countdownTimeout);
         // start drawing frames
-        setCamera (0);
+        const urlParams = new URLSearchParams(window.location.search);
+        setCameraByName (urlParams.get("camera"), 0);
         window.requestAnimationFrame (drawFrame);
         setTimeout (() => {
             document.getElementById (loadingDivId).style.opacity = 0;

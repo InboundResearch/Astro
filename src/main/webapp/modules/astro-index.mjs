@@ -26,7 +26,7 @@ let create = function (canvasDivId, fpsDivId, cameraDivId, loadingDivId, buttonB
         astro = astroIn;
         let currentButton;
         let buttonBar = document.getElementById(buttonBarDivId);
-        let addButton = function (innerText, filterCriteria, doClick = false) {
+        let addButton = function (innerText, filterCriteria, clickIfMatches) {
             let button = document.createElement("div");
             button.classList.add("divButton");
             button.innerText = innerText;
@@ -41,23 +41,29 @@ let create = function (canvasDivId, fpsDivId, cameraDivId, loadingDivId, buttonB
                 }
             };
             button.addEventListener("click", clickHandler);
-            if (doClick) {
+            if (innerText === clickIfMatches) {
                 clickHandler({target: button});
             }
             buttonBar.appendChild(button);
             return button;
         }
 
-        addButton("all", false, true);
-        addButton("oneweb", "ONEWEB");
-        addButton("starlink", "STARLINK");
-        addButton("iss", "ISS (ZARYA)");
-        //addButton("test", ["25544", "47258", "47284", "47293"]);
-        addButton("none", "[none]");
+        // figure out the default set of TLEs to display
+        const urlParams = new URLSearchParams(window.location.search);
+        let clickButtonName = urlParams.get("display") || "all";
+
+        // add the display buttons, default click one if a name is supplied
+        addButton("all", false, clickButtonName);
+        addButton("oneweb", "ONEWEB", clickButtonName);
+        addButton("starlink", "STARLINK", clickButtonName);
+        addButton("iss", "ISS (ZARYA)", clickButtonName);
+        //addButton("test", ["25544", "47258", "47284", "47293"], clickButtonName);
+        addButton("none", "[none]", clickButtonName);
 
         if (window.parent) {
             window.parent.postMessage("ready","*");
         }
+
         updateVis (updateVisData);
     });
 };
