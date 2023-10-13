@@ -571,12 +571,13 @@ let Tle = function () {
         }
         return { longitude: Math.atan2(eci.y, eci.x) - gmst, latitude: latitude, height: R / Math.cos(latitude) - a * C, gmst: gmst };
     };
+    // XXX this stuff should be computed based on the time scale?
     // time helpers
     const msPerSecond = 1.0e3;
     const secondsPerMinute = 60;
     const minutesPerHour = 60;
     const hoursPerDay = 24;
-    const daysLookAhead = 0.5;
+    const daysLookAhead = 1;
     // time steps
     const timeStep = msPerSecond * secondsPerMinute * 5;
     const timeStepCount = (msPerSecond * secondsPerMinute * minutesPerHour * hoursPerDay * daysLookAhead) / timeStep;
@@ -594,7 +595,7 @@ let Tle = function () {
         let elements = this.elements = parameters.elements;
         this.currentElementIndex = 0;
         // do initialization and reverse indexing
-        let nowTime = Date.now ();
+        let nowTime = parameters.nowTime;
         let elementIndex = this.elementIndex = {};
         const satelliteScale = Float4x4.scale (40 / earthRadius);
         for (let i = 0, end = elements.length; i < end; ++i) {
@@ -634,7 +635,7 @@ let Tle = function () {
             ), matrices[element.index]);
         };
         let computePosition = function (element) {
-            let deltaTime = Math.max(0, nowTime.getTime() - element.startTime);
+            let deltaTime = Math.max(0, nowTime - element.startTime);
             let index = deltaTime / timeStep;
             let lowIndex = Math.floor (index);
             let maxIndex = element.positions.length - 1;
@@ -725,8 +726,9 @@ $.addTle = function (filterCriteria) {
             }
         }, "tle");
         // let the full list of TLEs update
-        tle = Tle.new ({ elements: elements });
-        tle.updateElements (new Date (), tleNode.instanceTransforms.matrices, Number.POSITIVE_INFINITY);
+        let nowTime = getOffsetTime (performance.now());
+        tle = Tle.new ({ elements: elements, nowTime: nowTime });
+        tle.updateElements (nowTime, tleNode.instanceTransforms.matrices, Number.POSITIVE_INFINITY);
     }
 };
     let mainCanvasDiv;
@@ -853,9 +855,23 @@ $.addTle = function (filterCriteria) {
         };
         window.requestAnimationFrame (mmfrWorker);
     };
-    let originTime = performance.now ();
-    let originTimeOffset = Date.now () - originTime;
-    let timeFactor = 1;
+    // the origin time as a high performance counter, the delta between that and a normal time (so
+    // we can always correlate the two), and an absolute delta between the current time and the time
+    // we want to show
+    let originTime;
+    let originTimeOffset;
+    let currentTimeOffset;
+    // the time scale
+    let timeScale;
+    let setTimeScale = function (newTimeScale) {
+        timeScale = newTimeScale;
+        // see the declaration of these values for an explanation
+        originTime = performance.now ();
+        originTimeOffset = Date.now () - originTime;
+    };
+    let getOffsetTime = function (now) {
+        return currentTimeOffset + originTime + originTimeOffset + (timeScale * (now - originTime));
+    };
     let currentTime;
     let lastFrameTimeMs = 0;
     let lastTimestamp = 0;
@@ -871,15 +887,14 @@ $.addTle = function (filterCriteria) {
             let deltaTimestamp = timestamp - lastTimestamp;
             lastTimestamp = timestamp;
             // set the clock to "now" in J2000 time
-            //let nowTime = new Date (timestamp + performanceNowDateNowDelta);
-            let offsetTime = originTime + originTimeOffset + (timeFactor * (now - originTime));
+            let offsetTime = getOffsetTime (now);
             let nowTime = new Date (offsetTime);
             currentTime = computeJ2000 (nowTime);
             updateSolarSystem (currentTime);
             Thing.updateAll (currentTime);
-            // update the satellites - nowTime is a javascript Date
+            // update the satellites - offsetTime is a high resolution timestamp
             if (tle) {
-                tle.updateElements (nowTime, Node.get ("tle").instanceTransforms.matrices);
+                tle.updateElements (offsetTime, Node.get ("tle").instanceTransforms.matrices);
             }
             // set up the view parameters
             let currentPosition = cameraSettings[camera.name].currentPosition;
@@ -1206,7 +1221,7 @@ $.addTle = function (filterCriteria) {
                 node.transform = Float4x4.chain (
                     Float4x4.scale (0.01),
                     Float4x4.translate ([50000.0 / earthRadius, 0, 0]),
-                    Float4x4.rotateY (time * 4e3 * (1 / timeFactor)),
+                    Float4x4.rotateY (time * 4e3 * (1 / timeScale)),
                     Float4x4.rotateZ (Utility.degreesToRadians (18))
                 );
             }
@@ -1365,9 +1380,16 @@ $.addTle = function (filterCriteria) {
     let countdownTimeout;
     let startRendering = function () {
         clearTimeout(countdownTimeout);
-        // start drawing frames
+        // grab the url params so we can figure out a few things
         const urlParams = new URLSearchParams(window.location.search);
+        // set the initial current time offset
+        let time = urlParams.get("time") || "current";
+        currentTimeOffset = (time === "current") ? 0 : (parseFloat(time) - Date.now ());
+        // set the time scale to its initial value, either a parameter in the url or 1
+        setTimeScale (urlParams.get("time_scale"), 1);
+        // set the initial camera
         setCameraByName (urlParams.get("camera"), 0);
+        // start drawing frames
         window.requestAnimationFrame (drawFrame);
         setTimeout (() => {
             document.getElementById (loadingDivId).style.opacity = 0;

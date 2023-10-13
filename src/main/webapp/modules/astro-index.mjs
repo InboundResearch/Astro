@@ -1,4 +1,4 @@
-import {Astro} from "./astro.mjs"
+import {Astro} from "./astro-debug.mjs"
 import {SuborbitalTrack} from "./suborbital-track.mjs";
 
 let updateVisData = null;

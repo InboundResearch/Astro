@@ -140,9 +140,27 @@
         window.requestAnimationFrame (mmfrWorker);
     };
 
-    let originTime = performance.now ();
-    let originTimeOffset = Date.now () - originTime;
-    let timeFactor = 1;
+    // the origin time as a high performance counter, the delta between that and a normal time (so
+    // we can always correlate the two), and an absolute delta between the current time and the time
+    // we want to show
+    let originTime;
+    let originTimeOffset;
+    let currentTimeOffset;
+
+    // the time scale
+    let timeScale;
+
+    let setTimeScale = function (newTimeScale) {
+        timeScale = newTimeScale;
+
+        // see the declaration of these values for an explanation
+        originTime = performance.now ();
+        originTimeOffset = Date.now () - originTime;
+    };
+
+    let getOffsetTime = function (now) {
+        return currentTimeOffset + originTime + originTimeOffset + (timeScale * (now - originTime));
+    };
 
     let currentTime;
     let lastFrameTimeMs = 0;
@@ -162,16 +180,15 @@
             lastTimestamp = timestamp;
 
             // set the clock to "now" in J2000 time
-            //let nowTime = new Date (timestamp + performanceNowDateNowDelta);
-            let offsetTime = originTime + originTimeOffset + (timeFactor * (now - originTime));
+            let offsetTime = getOffsetTime (now);
             let nowTime = new Date (offsetTime);
             currentTime = computeJ2000 (nowTime);
             updateSolarSystem (currentTime);
             Thing.updateAll (currentTime);
 
-            // update the satellites - nowTime is a javascript Date
+            // update the satellites - offsetTime is a high resolution timestamp
             if (tle) {
-                tle.updateElements (nowTime, Node.get ("tle").instanceTransforms.matrices);
+                tle.updateElements (offsetTime, Node.get ("tle").instanceTransforms.matrices);
             }
 
             // set up the view parameters
@@ -547,7 +564,7 @@
                 node.transform = Float4x4.chain (
                     Float4x4.scale (0.01),
                     Float4x4.translate ([50000.0 / earthRadius, 0, 0]),
-                    Float4x4.rotateY (time * 4e3 * (1 / timeFactor)),
+                    Float4x4.rotateY (time * 4e3 * (1 / timeScale)),
                     Float4x4.rotateZ (Utility.degreesToRadians (18))
                 );
             }
@@ -722,9 +739,21 @@
     let countdownTimeout;
     let startRendering = function () {
         clearTimeout(countdownTimeout);
-        // start drawing frames
+
+        // grab the url params so we can figure out a few things
         const urlParams = new URLSearchParams(window.location.search);
+
+        // set the initial current time offset
+        let time = urlParams.get("time") || "current";
+        currentTimeOffset = (time === "current") ? 0 : (parseFloat(time) - Date.now ());
+
+        // set the time scale to its initial value, either a parameter in the url or 1
+        setTimeScale (urlParams.get("time_scale"), 1);
+
+        // set the initial camera
         setCameraByName (urlParams.get("camera"), 0);
+
+        // start drawing frames
         window.requestAnimationFrame (drawFrame);
         setTimeout (() => {
             document.getElementById (loadingDivId).style.opacity = 0;

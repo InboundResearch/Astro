@@ -31,12 +31,14 @@ let Tle = function () {
         return { longitude: Math.atan2(eci.y, eci.x) - gmst, latitude: latitude, height: R / Math.cos(latitude) - a * C, gmst: gmst };
     };
 
+    // XXX this stuff should be computed based on the time scale?
+
     // time helpers
     const msPerSecond = 1.0e3;
     const secondsPerMinute = 60;
     const minutesPerHour = 60;
     const hoursPerDay = 24;
-    const daysLookAhead = 0.5;
+    const daysLookAhead = 1;
 
     // time steps
     const timeStep = msPerSecond * secondsPerMinute * 5;
@@ -59,7 +61,7 @@ let Tle = function () {
         this.currentElementIndex = 0;
 
         // do initialization and reverse indexing
-        let nowTime = Date.now ();
+        let nowTime = parameters.nowTime;
         let elementIndex = this.elementIndex = {};
         const satelliteScale = Float4x4.scale (40 / earthRadius);
         for (let i = 0, end = elements.length; i < end; ++i) {
@@ -102,7 +104,7 @@ let Tle = function () {
         };
 
         let computePosition = function (element) {
-            let deltaTime = Math.max(0, nowTime.getTime() - element.startTime);
+            let deltaTime = Math.max(0, nowTime - element.startTime);
             let index = deltaTime / timeStep;
             let lowIndex = Math.floor (index);
             let maxIndex = element.positions.length - 1;
@@ -204,7 +206,8 @@ $.addTle = function (filterCriteria) {
         }, "tle");
 
         // let the full list of TLEs update
-        tle = Tle.new ({ elements: elements });
-        tle.updateElements (new Date (), tleNode.instanceTransforms.matrices, Number.POSITIVE_INFINITY);
+        let nowTime = getOffsetTime (performance.now());
+        tle = Tle.new ({ elements: elements, nowTime: nowTime });
+        tle.updateElements (nowTime, tleNode.instanceTransforms.matrices, Number.POSITIVE_INFINITY);
     }
 };
