@@ -396,8 +396,8 @@ let Stars = function () {
                             point = Float3.copy (Float4x4.preMultiply (point, transform));
                             positionBuffer.push (point);
                         }
-                        // compute the color for the star, and push the colors into the final
-                        // star color buffer
+                        // compute the color for the star, and push the colors into the final star
+                        // color buffer
                         let alpha = 0.25 + (0.75 * (1.0 - interpolant));
                         let color = ("K" in star) ? Blackbody.colorAtTemperature (star.K) : [1.0, 0.5, 0.5];
                         for (let i = 1; i < starPoints.length; ++i) {
@@ -1036,7 +1036,7 @@ $.addTle = function (filterCriteria) {
             let context = wgl.getContext();
             context.clear (context.COLOR_BUFFER_BIT | context.DEPTH_BUFFER_BIT);
             // draw the stars scene
-            let starsFov = 60;
+            let starsFov = 75;
             let starsViewMatrix = Float4x4.copy (viewMatrix);
             starsViewMatrix[12] = starsViewMatrix[13] = starsViewMatrix[14] = 0.0;
             standardUniforms.CAMERA_POSITION = [0, 0, 0];
@@ -1140,6 +1140,19 @@ $.addTle = function (filterCriteria) {
             shape: "ball",
             children: false
         }, "starfield"));
+        if (urlParams.get("constellations")) {
+            let constellationsNode = Node.new ({
+                transform: starsTransform,
+                state: function (standardUniforms) {
+                    Program.get ("overlay").use ();
+                    standardUniforms.OUTPUT_ALPHA_PARAMETER = 0.25;
+                    standardUniforms.TEXTURE_SAMPLER = "constellations";
+                },
+                shape: "ball",
+                children: false
+            }, "constellations");
+            starsScene.addChild (constellationsNode);
+        }
         let sunColor = Blackbody.colorAtTemperature (5800);
         let sunNode = Node.new ({
             transform: Float4x4.IDENTITY,
@@ -1369,6 +1382,13 @@ $.addTle = function (filterCriteria) {
         }
         setCamera (fallback);
     }
+    // grab the url params so we can figure out a few things
+    const urlParams = new URLSearchParams(window.location.search);
+    // set the initial current time offset
+    let time = urlParams.get("time") || "current";
+    currentTimeOffset = (time === "current") ? 0 : (parseFloat(time) - Date.now ());
+    // set the time scale to its initial value, either a parameter in the url or 1
+    setTimeScale (parseFloat(urlParams.get("time_scale")) || 1.0);
     let handleCameraClick = function (event) {
         // increment the current camera index and set it
         setCamera ((currentCameraIndex + 1) % cameras.length);
@@ -1380,13 +1400,6 @@ $.addTle = function (filterCriteria) {
     let countdownTimeout;
     let startRendering = function () {
         clearTimeout(countdownTimeout);
-        // grab the url params so we can figure out a few things
-        const urlParams = new URLSearchParams(window.location.search);
-        // set the initial current time offset
-        let time = urlParams.get("time") || "current";
-        currentTimeOffset = (time === "current") ? 0 : (parseFloat(time) - Date.now ());
-        // set the time scale to its initial value, either a parameter in the url or 1
-        setTimeScale (urlParams.get("time_scale") || 1.0);
         // set the initial camera
         setCameraByName (urlParams.get("camera"), 0);
         // start drawing frames
@@ -1430,13 +1443,13 @@ $.addTle = function (filterCriteria) {
     render = Render.new ({
         canvasDivId: mainCanvasDivId,
         loaders: [
-            LoaderShader.new ("https://astro.irdev.us/shaders/@.glsl")
+            LoaderShader.new ("shaders/@.glsl")
                 .addFragmentShaders (["earth", "clouds", "atmosphere", "shadowed", "shadowed-texture", "hardlight"]),
-            LoaderPath.new ({ type: Texture, path: "https://astro.irdev.us/textures/@.png" })
-                .addItems (["clouds", "earth-day", "earth-night", "earth-specular-map", "moon", "satellite"], { generateMipMap: true }),
-            LoaderPath.new ({ type: Texture, path: "https://astro.irdev.us/textures/@.jpg" })
+            LoaderPath.new ({ type: Texture, path: "textures/@.png" })
+                .addItems (["clouds", "earth-day", "earth-night", "earth-specular-map", "moon", "satellite", "constellations"], { generateMipMap: true }),
+            LoaderPath.new ({ type: Texture, path: "textures/@.jpg" })
                 .addItems ("starfield"),
-            LoaderPath.new ({ type: TextFile, path: "https://astro.irdev.us/data/@.json" })
+            LoaderPath.new ({ type: TextFile, path: "data/@.json" })
                 .addItems (["bsc5-short", "messier"]),
             Loader.new ()
                 // proxy to get around the CORS problem

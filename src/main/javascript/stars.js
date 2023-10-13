@@ -63,8 +63,8 @@ let Stars = function () {
                             positionBuffer.push (point);
                         }
 
-                        // compute the color for the star, and push the colors into the final
-                        // star color buffer
+                        // compute the color for the star, and push the colors into the final star
+                        // color buffer
                         let alpha = 0.25 + (0.75 * (1.0 - interpolant));
                         let color = ("K" in star) ? Blackbody.colorAtTemperature (star.K) : [1.0, 0.5, 0.5];
                         for (let i = 1; i < starPoints.length; ++i) {

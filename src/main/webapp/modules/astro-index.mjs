@@ -49,8 +49,7 @@ let create = function (canvasDivId, fpsDivId, cameraDivId, loadingDivId, buttonB
         }
 
         // figure out the default set of TLEs to display
-        // XXX this tries to set some stuff up before the clock has been started... need a formal clock
-        let clickButtonName = "none"; //new URLSearchParams(window.location.search).get("display") || "all";
+        let clickButtonName = new URLSearchParams(window.location.search).get("display") || "all";
 
         // add the display buttons, default click one if a name is supplied
         addButton("all", false, clickButtonName);
