@@ -577,9 +577,10 @@ let Tle = function () {
     const secondsPerMinute = 60;
     const minutesPerHour = 60;
     const hoursPerDay = 24;
-    const daysLookAhead = 1;
+    const daysLookAhead = 0.5;
+    const minutesPerTimeStep = 1;//5;
     // time steps
-    const timeStep = msPerSecond * secondsPerMinute * 5;
+    const timeStep = msPerSecond * secondsPerMinute * minutesPerTimeStep;
     const timeStepCount = (msPerSecond * secondsPerMinute * minutesPerHour * hoursPerDay * daysLookAhead) / timeStep;
     const twoPi = Math.PI * 2;
     // utility functions
@@ -1186,37 +1187,6 @@ $.addTle = function (filterCriteria) {
                 context.depthMask (true);
             }
         });
-        let moonNode = Node.new ({
-            transform: Float4x4.IDENTITY,
-            state: function (standardUniforms) {
-                Program.get ("shadowed-texture").use ()
-                    .setSunPosition (solarSystem.sunPosition);
-                standardUniforms.OUTPUT_ALPHA_PARAMETER = 1.0;
-                standardUniforms.TEXTURE_SAMPLER = "moon";
-                standardUniforms.MODEL_COLOR = [1.0, 1.0, 1.0];
-                standardUniforms.AMBIENT_CONTRIBUTION = 0.1;
-                standardUniforms.DIFFUSE_CONTRIBUTION = 0.95;
-                standardUniforms.SPECULAR_CONTRIBUTION = 0.05;
-                standardUniforms.SPECULAR_EXPONENT = 8.0;
-            },
-            shape: "ball-med",
-            children: false
-        }, "moon");
-        solarSystemScene.addChild (moonNode);
-        Thing.new ({
-            node: "moon",
-            update: function (time) {
-                // get the node
-                let node = Node.get (this.node);
-                // set the moon position and orientation in transform
-                node.transform = Float4x4.chain (
-                    Float4x4.scale (moonScale),
-                    Float4x4.rotateY (solarSystem.moonTheta),
-                    //Float4x4.rotateXAxisTo (solarSystem.moonDirection),
-                    Float4x4.translate (Float3.scale (solarSystem.moonDirection, solarSystem.moonR))
-                );
-            }
-        }, "moon");
         let worldNode = Node.new ({
             transform: Float4x4.IDENTITY
         }, "world");
@@ -1314,6 +1284,37 @@ $.addTle = function (filterCriteria) {
                 Node.get (this.node).transform = Float4x4.rotateY (Utility.degreesToRadians (gmst));
             }
         }, "world");
+        let moonNode = Node.new ({
+            transform: Float4x4.IDENTITY,
+            state: function (standardUniforms) {
+                Program.get ("shadowed-texture").use ()
+                    .setSunPosition (solarSystem.sunPosition);
+                standardUniforms.OUTPUT_ALPHA_PARAMETER = 1.0;
+                standardUniforms.TEXTURE_SAMPLER = "moon";
+                standardUniforms.MODEL_COLOR = [1.0, 1.0, 1.0];
+                standardUniforms.AMBIENT_CONTRIBUTION = 0.1;
+                standardUniforms.DIFFUSE_CONTRIBUTION = 0.95;
+                standardUniforms.SPECULAR_CONTRIBUTION = 0.05;
+                standardUniforms.SPECULAR_EXPONENT = 8.0;
+            },
+            shape: "ball-med",
+            children: false
+        }, "moon");
+        solarSystemScene.addChild (moonNode);
+        Thing.new ({
+            node: "moon",
+            update: function (time) {
+                // get the node
+                let node = Node.get (this.node);
+                // set the moon position and orientation in transform
+                node.transform = Float4x4.chain (
+                    Float4x4.scale (moonScale),
+                    Float4x4.rotateY (solarSystem.moonTheta),
+                    //Float4x4.rotateXAxisTo (solarSystem.moonDirection),
+                    Float4x4.translate (Float3.scale (solarSystem.moonDirection, solarSystem.moonR))
+                );
+            }
+        }, "moon");
         let dscovrNode = Node.new ({
             transform: Float4x4.identity,
             children: false
@@ -1367,7 +1368,7 @@ $.addTle = function (filterCriteria) {
         // increment the current camera
         currentCameraIndex = cameraIndex;
         camera = cameras[currentCameraIndex];
-        cameraDiv.innerHTML = camera.name;
+        cameraDiv.innerText = camera.name;
         // make sure there is a value for the current position (once per "at")
         if (!(camera.name in cameraSettings)) {
             cameraSettings[camera.name] = { currentPosition: ("default" in camera) ? camera.default : [0, 0] };

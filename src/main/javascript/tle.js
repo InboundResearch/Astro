@@ -38,10 +38,11 @@ let Tle = function () {
     const secondsPerMinute = 60;
     const minutesPerHour = 60;
     const hoursPerDay = 24;
-    const daysLookAhead = 1;
+    const daysLookAhead = 0.5;
+    const minutesPerTimeStep = 1;//5;
 
     // time steps
-    const timeStep = msPerSecond * secondsPerMinute * 5;
+    const timeStep = msPerSecond * secondsPerMinute * minutesPerTimeStep;
     const timeStepCount = (msPerSecond * secondsPerMinute * minutesPerHour * hoursPerDay * daysLookAhead) / timeStep;
 
     const twoPi = Math.PI * 2;

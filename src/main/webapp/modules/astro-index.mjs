@@ -24,6 +24,8 @@ let create = function (canvasDivId, fpsDivId, cameraDivId, loadingDivId, buttonB
 
     window.astro = Astro (canvasDivId, fpsDivId, cameraDivId, loadingDivId, astroIn => {
         astro = astroIn;
+
+        let searchParams = new URLSearchParams(window.location.search);
         let currentButton;
         let buttonBar = document.getElementById(buttonBarDivId);
         let addButton = function (innerText, filterCriteria, clickIfMatches) {
@@ -49,7 +51,7 @@ let create = function (canvasDivId, fpsDivId, cameraDivId, loadingDivId, buttonB
         }
 
         // figure out the default set of TLEs to display
-        let clickButtonName = new URLSearchParams(window.location.search).get("display") || "all";
+        let clickButtonName = searchParams.get("display") || "iss";
 
         // add the display buttons, default click one if a name is supplied
         addButton("all", false, clickButtonName);
@@ -58,6 +60,14 @@ let create = function (canvasDivId, fpsDivId, cameraDivId, loadingDivId, buttonB
         addButton("iss", "ISS (ZARYA)", clickButtonName);
         //addButton("test", ["25544", "47258", "47284", "47293"], clickButtonName);
         addButton("none", "[none]", clickButtonName);
+
+        // show the controls if we should
+        if (searchParams.get("showButtons")) {
+            buttonBar.style.display = "flex";
+        }
+        if (searchParams.get("showFps")) {
+            document.getElementById(fpsDivId).style.display = "block";
+        }
 
         if (window.parent) {
             window.parent.postMessage("ready","*");
